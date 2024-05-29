@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ベンチマークテスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        table {
+            margin: 0 auto;
+            border-collapse: collapse;
+            width: 80%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        canvas {
+            border: 1px solid black;
+            display: block;
+            margin: 20px auto;
+        }
+        #results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ベンチマークテスト</h1>
+    <button onclick="runBenchmarks()">ベンチマーク開始</button>
+    <div id="results">
+        <table>
+            <thead>
+                <tr>
+                    <th>テスト</th>
+                    <th>スコア</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>ALU</td>
+                    <td id="alu-score">-</td>
+                </tr>
+                <tr>
+                    <td>FPU</td>
+                    <td id="fpu-score">-</td>
+                </tr>
+                <tr>
+                    <td>メモリ読み込み</td>
+                    <td id="mem-read-score">-</td>
+                </tr>
+                <tr>
+                    <td>メモリ書き込み</td>
+                    <td id="mem-write-score">-</td>
+                </tr>
+                <tr>
+                    <td>Rectangle</td>
+                    <td id="rectangle-score">-</td>
+                </tr>
+                <tr>
+                    <td>Text</td>
+                    <td id="text-score">-</td>
+                </tr>
+                <tr>
+                    <td>Circle</td>
+                    <td id="circle-score">-</td>
+                </tr>
+                <tr>
+                    <td>BitBlt</td>
+                    <td id="bitblt-score">-</td>
+                </tr>
+                <tr>
+                    <th>総合スコア</th>
+                    <th id="total-score">-</th>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <script>
+        function runBenchmarks() {
+            const results = {
+                alu: benchmarkALU(),
+                fpu: benchmarkFPU(),
+                memRead: benchmarkMemoryRead(),
+                memWrite: benchmarkMemoryWrite(),
+                rectangle: benchmarkRectangle(),
+                text: benchmarkText(),
+                circle: benchmarkCircle(),
+                bitblt: benchmarkBitBlt()
+            };
+
+            document.getElementById('alu-score').innerText = results.alu;
+            document.getElementById('fpu-score').innerText = results.fpu;
+            document.getElementById('mem-read-score').innerText = results.memRead;
+            document.getElementById('mem-write-score').innerText = results.memWrite;
+            document.getElementById('rectangle-score').innerText = results.rectangle;
+            document.getElementById('text-score').innerText = results.text;
+            document.getElementById('circle-score').innerText = results.circle;
+            document.getElementById('bitblt-score').innerText = results.bitblt;
+
+            const totalScore = Object.values(results).reduce((acc, score) => acc + score, 0);
+            document.getElementById('total-score').innerText = totalScore;
+        }
+
+        function benchmarkALU() {
+            const start = performance.now();
+            let sum = 0;
+            for (let i = 0; i < 1e7; i++) {
+                sum += i;
+            }
+            const end = performance.now();
+            return Math.round(1e7 / (end - start));
+        }
+
+        function benchmarkFPU() {
+            const start = performance.now();
+            let sum = 0;
+            for (let i = 0; i < 1e7; i++) {
+                sum += Math.sin(i);
+            }
+            const end = performance.now();
+            return Math.round(1e7 / (end - start));
+        }
+
+        function benchmarkMemoryRead() {
+            const array = new Float64Array(1e7);
+            for (let i = 0; i < array.length; i++) {
+                array[i] = Math.random();
+            }
+            const start = performance.now();
+            let sum = 0;
+            for (let i = 0; i < array.length; i++) {
+                sum += array[i];
+            }
+            const end = performance.now();
+            return Math.round(array.length / (end - start));
+        }
+
+        function benchmarkMemoryWrite() {
+            const array = new Float64Array(1e7);
+            const start = performance.now();
+            for (let i = 0; i < array.length; i++) {
+                array[i] = Math.random();
+            }
+            const end = performance.now();
+            return Math.round(array.length / (end - start));
+        }
+
+        function benchmarkRectangle() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const start = performance.now();
+            for (let i = 0; i < 1e4; i++) {
+                ctx.fillStyle = `rgb(${Math.random()*255},${Math.random()*255},${Math.random()*255})`;
+                ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 50, 50);
+            }
+            const end = performance.now();
+            return Math.round(1e4 / (end - start));
+        }
+
+        function benchmarkText() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const start = performance.now();
+            for (let i = 0; i < 1e4; i++) {
+                ctx.font = '20px Arial';
+                ctx.fillStyle = `rgb(${Math.random()*255},${Math.random()*255},${Math.random()*255})`;
+                ctx.fillText('Benchmark', Math.random()*canvas.width, Math.random()*canvas.height);
+            }
+            const end = performance.now();
+            return Math.round(1e4 / (end - start));
+        }
+
+        function benchmarkCircle() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const start = performance.now();
+            for (let i = 0; i < 1e4; i++) {
+                ctx.beginPath();
+                ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, 25, 0, 2 * Math.PI);
+                ctx.fillStyle = `rgb(${Math.random()*255},${Math.random()*255},${Math.random()*255})`;
+                ctx.fill();
+            }
+            const end = performance.now();
+            return Math.round(1e4 / (end - start));
+        }
+
+        function benchmarkBitBlt() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const offscreenCanvas = document.createElement('canvas');
+            offscreenCanvas.width = canvas.width;
+            offscreenCanvas.height = canvas.height;
+            const offscreenCtx = offscreenCanvas.getContext('2d');
+            offscreenCtx.fillStyle = 'red';
+            offscreenCtx.fillRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+
+            const start = performance.now();
+            for (let i = 0; i < 1e4; i++) {
+                ctx.drawImage(offscreenCanvas, 0, 0);
+            }
+            const end = performance.now();
+            return Math.round(1e4 / (end - start));
+        }
+    </script>
+</body>
+</html>
